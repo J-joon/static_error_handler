@@ -1,6 +1,8 @@
 from __future__ import annotations
 """Typed implementation of a minimal Result type."""
 
+__version__ = "0.1.0"
+
 from typing import TypeVar, Callable, Generic, NoReturn, TypeAlias
 from dataclasses import dataclass
 
@@ -168,3 +170,11 @@ class Err(Generic[T, E]):
 
 # Union style alias to mirror Rust's ``Result`` type
 Result: TypeAlias = Ok[T, E] | Err[T, E]
+
+__all__ = [
+    "Ok",
+    "Err",
+    "Result",
+    "panic",
+    "__version__",
+]
