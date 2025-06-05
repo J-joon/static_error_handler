@@ -1,7 +1,8 @@
 from __future__ import annotations
-from typing import TypeVar, Callable, Generic, Protocol, NoReturn
+"""Typed implementation of a minimal Result type."""
+
+from typing import TypeVar, Callable, Generic, NoReturn, TypeAlias
 from dataclasses import dataclass
-from enum import Enum, auto
 
 T = TypeVar("T")
 U = TypeVar("U")
@@ -165,4 +166,5 @@ class Err(Generic[T, E]):
         op(self.error)
         return self
 
-Result = Ok[T, E] | Err[T, E]
+# Union style alias to mirror Rust's ``Result`` type
+Result: TypeAlias = Ok[T, E] | Err[T, E]
