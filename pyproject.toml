@@ -18,4 +18,10 @@ classifiers = [
 
 [tool.setuptools]
 package-dir = {"" = "src"}
-py-modules = ["static_error_handler"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+static_error_handler = ["py.typed"]
+
