@@ -1,7 +1,7 @@
 from __future__ import annotations
 """Typed implementation of a minimal Result type."""
 
-__version__ = "0.1.1"
+__version__ = "0.1.3"
 
 from typing import TypeVar, Callable, Generic, NoReturn, TypeAlias
 from dataclasses import dataclass
