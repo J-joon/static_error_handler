@@ -172,9 +172,6 @@ class Err(Result[T, E]):
         op(self.error)
         return self
 
-# Union style alias to mirror Rust's ``Result`` type
-Result: TypeAlias = Ok[T, E] | Err[T, E]
-
 __all__ = [
     "Ok",
     "Err",
