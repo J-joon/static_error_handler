@@ -1,7 +1,7 @@
 from __future__ import annotations
 """Typed implementation of a minimal Result type."""
 
-__version__ = "0.1.3"
+__version__ = "0.1.4"
 
 from typing import TypeVar, Callable, Generic, NoReturn, TypeAlias
 from dataclasses import dataclass
@@ -24,9 +24,13 @@ def panic(message: str) -> NoReturn:
     """
     raise RuntimeError(f"Panic: {message}")
 
-
+class Result(Generic[T, E]):
+    """Base class for Ok and Err to define the Result type."""
+    # This class should probably be abstract and have no direct implementation
+    pass
+    
 @dataclass
-class Ok(Generic[T, E]):
+class Ok(Result[T, E]):
     value: T
 
     def is_ok(self) -> bool:
@@ -98,7 +102,7 @@ class Ok(Generic[T, E]):
 
 
 @dataclass
-class Err(Generic[T, E]):
+class Err(Result[T, E]):
     error: E
 
     def is_ok(self) -> bool:
