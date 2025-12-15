@@ -1,5 +1,6 @@
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, NoReturn, Protocol, runtime_checkable
+from typing import NoReturn, Protocol, runtime_checkable
 
 
 def panic(message: str) -> NoReturn:
@@ -189,4 +190,4 @@ class Err[T, E](Result[T, E]):
         return self
 
 
-__all__ = ["Ok", "Err", "Result", "panic", "__version__"]
+__all__ = ["Err", "Ok", "Result", "panic"]

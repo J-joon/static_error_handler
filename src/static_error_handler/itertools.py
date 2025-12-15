@@ -1,44 +1,37 @@
-from typing import Callable, Iterable, TypeVar, Any
-from static_error_handler import Result, Ok, Err
+from collections.abc import Callable, Iterable, Iterator
+from typing import TypeVar
 
-# Generic Types
+from static_error_handler import Err, Ok, Result
+
 T = TypeVar("T")
 E = TypeVar("E")
 R = TypeVar("R")
 
+
 def process_results(
-    iterable: Iterable[Result[T, E]], 
-    func: Callable[[Iterable[T]], R]
+    iterable: Iterable[Result[T, E]], func: Callable[[Iterable[T]], R]
 ) -> Result[R, E]:
     """
-    Adapts an iterable of Results into an iterable of values. 
-    If an Err is encountered, iteration stops, and that Err is returned.
+    Adapt an iterable of Result[T, E] into an iterable of T.
+
+    - If all items are Ok, returns Ok(func(values)).
+    - If any Err is encountered, iteration stops early and returns that Err.
     """
-    
-    # 1. This list acts as our mutable memory slot (like &mut Option<E> in Rust)
-    captured_error = []
+    sentinel = object()
+    captured: E | object = sentinel
 
-    # 2. Define the "Shim" Generator
-    def result_unwrapper():
+    def result_unwrapper() -> Iterator[T]:
+        nonlocal captured
         for item in iterable:
-            if captured_error: 
-                # Safety check: if we already found an error, stop yielding
-                return
-
             if item.is_ok():
                 yield item.unwrap()
             else:
-                # Capture the error and STOP the generator (equivalent to returning None in Rust)
-                captured_error.append(item.unwrap_err())
+                captured = item.unwrap_err()
                 return
 
-    # 3. Pass the shim to the user's function
-    # The user's function thinks it is getting a normal iterable of T
     computed_value = func(result_unwrapper())
 
-    # 4. Check if the loop was broken by an error
-    if captured_error:
-        return Err(captured_error[0])
-    
-    # 5. If no error, wrap the result in Ok
+    if captured is not sentinel:
+        return Err(captured)  # type: ignore[arg-type]
+
     return Ok(computed_value)

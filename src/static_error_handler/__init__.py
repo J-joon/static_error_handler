@@ -1,4 +1,5 @@
-from .static_error_handler import Ok, Err, Result, panic
+from .static_error_handler import Err, Ok, Result, panic
 
-__all__ = ["Ok", "Err", "Result", "panic", "__version__"]
-__version__ = "0.1.4"
+__version__ = "0.1.5"
+
+__all__ = ["Err", "Ok", "Result", "__version__", "panic"]
