@@ -3,6 +3,8 @@
 A minimal Python adaptation of Rust's `Result` type. Provides `Ok` and `Err`
 classes with helper methods for error handling.
 
+Requires Python 3.12 or later.
+
 ## Installation
 
 Once published on PyPI you can install the library with:
