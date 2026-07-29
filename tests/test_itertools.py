@@ -1,12 +1,10 @@
-# tests/test_itertools.py
-from static_error_handler import Err, Ok
+from collections.abc import Iterator
 
-# If your file is literally `src/itertools.py`, this import is correct:
-from static_error_handler.itertools import process_results  # noqa: E402
+from static_error_handler import Err, Ok, Result, collect_results, process_results
 
 
 def test_process_results_all_ok() -> None:
-    items = [Ok(1), Ok(2), Ok(3)]
+    items: list[Result[int, str]] = [Ok(1), Ok(2), Ok(3)]
 
     out = process_results(items, lambda xs: sum(xs))
 
@@ -15,24 +13,64 @@ def test_process_results_all_ok() -> None:
 
 
 def test_process_results_stops_on_first_err_and_returns_err() -> None:
-    items = [Ok(1), Err("boom"), Ok(999)]
+    callback_called = False
 
-    def consume(xs):
-        seen = []
-        for x in xs:
-            # If iteration continues past the Err, this would trigger.
-            assert x != 999
-            seen.append(x)
-        return tuple(seen)
+    def items() -> Iterator[Result[int, str]]:
+        yield Ok(1)
+        yield Err("boom")
+        raise AssertionError("iteration continued past the first Err")
 
-    out = process_results(items, consume)
+    def consume(xs: list[int]) -> tuple[int, ...]:
+        nonlocal callback_called
+        callback_called = True
+        return tuple(xs)
+
+    out = process_results(items(), consume)
+
+    assert out.is_err()
+    assert out.unwrap_err() == "boom"
+    assert callback_called is False
+
+
+def test_process_results_checks_for_errors_before_calling_func() -> None:
+    items: list[Result[int, str]] = [Ok(1), Err("boom")]
+
+    out = process_results(items, lambda _: 0)
 
     assert out.is_err()
     assert out.unwrap_err() == "boom"
 
 
 def test_process_results_empty_iterable() -> None:
-    out = process_results([], lambda xs: list(xs))
+    items: list[Result[int, str]] = []
+    out = process_results(items, list)
+
+    assert out.is_ok()
+    assert out.unwrap() == []
+
+
+def test_collect_results_all_ok() -> None:
+    items: list[Result[int, str]] = [Ok(1), Ok(2), Ok(3)]
+
+    out = collect_results(items)
+
+    assert out.is_ok()
+    assert out.unwrap() == [1, 2, 3]
+
+
+def test_collect_results_returns_first_err() -> None:
+    items: list[Result[int, str]] = [Ok(1), Err("first"), Err("second")]
+
+    out = collect_results(items)
+
+    assert out.is_err()
+    assert out.unwrap_err() == "first"
+
+
+def test_collect_results_empty_iterable() -> None:
+    items: list[Result[int, str]] = []
+
+    out = collect_results(items)
 
     assert out.is_ok()
     assert out.unwrap() == []

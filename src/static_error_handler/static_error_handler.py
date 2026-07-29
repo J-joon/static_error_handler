@@ -3,8 +3,12 @@ from dataclasses import dataclass
 from typing import NoReturn, Protocol, runtime_checkable
 
 
+class PanicError(RuntimeError):
+    """Raised when a Result is unwrapped as the wrong variant."""
+
+
 def panic(message: str) -> NoReturn:
-    raise RuntimeError(f"Panic: {message}")
+    raise PanicError(f"Panic: {message}")
 
 
 @runtime_checkable
@@ -87,10 +91,10 @@ class Ok[T, E](Result[T, E]):
         return self.value
 
     def expect_err(self, msg: str) -> E:
-        panic(msg)
+        panic(f"{msg}: {self.value!r}")
 
     def unwrap_err(self) -> E:
-        panic("unwrap_err")
+        panic(f"called unwrap_err on Ok: {self.value!r}")
 
     def and_[U](self, res: Result[U, E]) -> Result[U, E]:
         return res
@@ -153,10 +157,10 @@ class Err[T, E](Result[T, E]):
         return Err(op(self.error))
 
     def expect(self, msg: str) -> T:
-        panic(msg)
+        panic(f"{msg}: {self.error!r}")
 
     def unwrap(self) -> T:
-        panic("unwrap")
+        panic(f"called unwrap on Err: {self.error!r}")
 
     def expect_err(self, msg: str) -> E:
         return self.error
@@ -190,4 +194,4 @@ class Err[T, E](Result[T, E]):
         return self
 
 
-__all__ = ["Err", "Ok", "Result", "panic"]
+__all__ = ["Err", "Ok", "PanicError", "Result", "panic"]

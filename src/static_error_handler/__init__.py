@@ -1,5 +1,15 @@
-from .static_error_handler import Err, Ok, Result, panic
+from .itertools import collect_results, process_results
+from .static_error_handler import Err, Ok, PanicError, Result, panic
 
-__version__ = "0.1.5"
+__version__ = "0.2.0"
 
-__all__ = ["Err", "Ok", "Result", "__version__", "panic"]
+__all__ = [
+    "Err",
+    "Ok",
+    "PanicError",
+    "Result",
+    "__version__",
+    "collect_results",
+    "panic",
+    "process_results",
+]

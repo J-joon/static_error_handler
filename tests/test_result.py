@@ -1,6 +1,6 @@
 import pytest
 
-from static_error_handler import Err, Ok, Result, panic
+from static_error_handler import Err, Ok, PanicError, Result, panic
 
 
 def test_ok_basic_predicates_and_extractors() -> None:
@@ -58,10 +58,10 @@ def test_unwrap_and_expect_on_ok() -> None:
     assert r.unwrap() == 1
     assert r.expect("should not fail") == 1
 
-    with pytest.raises(RuntimeError, match=r"Panic:"):
+    with pytest.raises(PanicError, match=r"Panic: called unwrap_err on Ok: 1"):
         r.unwrap_err()
 
-    with pytest.raises(RuntimeError, match=r"Panic:"):
+    with pytest.raises(PanicError, match=r"Panic: expected error: 1"):
         r.expect_err("expected error")
 
 
@@ -71,10 +71,10 @@ def test_unwrap_and_expect_on_err() -> None:
     assert r.unwrap_err() == "e"
     assert r.expect_err("should not fail") == "e"
 
-    with pytest.raises(RuntimeError, match=r"Panic:"):
+    with pytest.raises(PanicError, match=r"Panic: called unwrap on Err: 'e'"):
         r.unwrap()
 
-    with pytest.raises(RuntimeError, match=r"Panic:"):
+    with pytest.raises(PanicError, match=r"Panic: expected ok: 'e'"):
         r.expect("expected ok")
 
 
@@ -130,8 +130,10 @@ def test_inspect_and_inspect_err_side_effects() -> None:
 
 
 def test_panic_helper() -> None:
-    with pytest.raises(RuntimeError, match=r"Panic: hello"):
+    with pytest.raises(PanicError, match=r"Panic: hello"):
         panic("hello")
+
+    assert issubclass(PanicError, RuntimeError)
 
 
 def test_runtime_protocol_check() -> None:

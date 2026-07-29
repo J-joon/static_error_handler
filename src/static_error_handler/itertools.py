@@ -1,37 +1,28 @@
-from collections.abc import Callable, Iterable, Iterator
-from typing import TypeVar
+from collections.abc import Callable, Iterable
 
-from static_error_handler import Err, Ok, Result
-
-T = TypeVar("T")
-E = TypeVar("E")
-R = TypeVar("R")
+from .static_error_handler import Err, Ok, Result
 
 
-def process_results(
-    iterable: Iterable[Result[T, E]], func: Callable[[Iterable[T]], R]
+def collect_results[T, E](iterable: Iterable[Result[T, E]]) -> Result[list[T], E]:
+    """Collect Ok values, stopping at and returning the first Err."""
+    values: list[T] = []
+    for item in iterable:
+        if item.is_err():
+            return Err(item.unwrap_err())
+        values.append(item.unwrap())
+    return Ok(values)
+
+
+def process_results[T, E, R](
+    iterable: Iterable[Result[T, E]], func: Callable[[list[T]], R]
 ) -> Result[R, E]:
     """
-    Adapt an iterable of Result[T, E] into an iterable of T.
+    Collect Ok values and transform them only when every item is Ok.
 
-    - If all items are Ok, returns Ok(func(values)).
-    - If any Err is encountered, iteration stops early and returns that Err.
+    The iterable is consumed eagerly up to the first Err. The callback is never
+    called when an Err is present.
     """
-    sentinel = object()
-    captured: E | object = sentinel
+    return collect_results(iterable).map(func)
 
-    def result_unwrapper() -> Iterator[T]:
-        nonlocal captured
-        for item in iterable:
-            if item.is_ok():
-                yield item.unwrap()
-            else:
-                captured = item.unwrap_err()
-                return
 
-    computed_value = func(result_unwrapper())
-
-    if captured is not sentinel:
-        return Err(captured)  # type: ignore[arg-type]
-
-    return Ok(computed_value)
+__all__ = ["collect_results", "process_results"]

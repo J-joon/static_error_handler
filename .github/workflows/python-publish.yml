@@ -24,13 +24,33 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.x"
+          python-version: "3.12"
 
-      - name: Build release distributions
+      - name: Install build and validation dependencies
+        run: python -m pip install --upgrade --editable ".[dev]" build twine
+
+      - name: Verify release tag
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
-          # NOTE: put your own distribution build steps here.
-          python -m pip install build
+          PACKAGE_VERSION=$(python -c "import static_error_handler; print(static_error_handler.__version__)")
+          if [ "$RELEASE_TAG" != "v$PACKAGE_VERSION" ]; then
+            echo "Release tag $RELEASE_TAG does not match package version $PACKAGE_VERSION"
+            exit 1
+          fi
+
+      - name: Validate source
+        run: |
+          python -m ruff check .
+          python -m ruff format --check .
+          python -m mypy src tests
+          python -m coverage run -m pytest
+          python -m coverage report -m
+
+      - name: Build and check release distributions
+        run: |
           python -m build
+          python -m twine check dist/*
 
       - name: Upload distributions
         uses: actions/upload-artifact@v4
@@ -50,12 +70,7 @@ jobs:
     # For more information, see: https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment#deployment-protection-rules
     environment:
       name: pypi
-      # OPTIONAL: uncomment and update to include your PyPI project URL in the deployment status:
-      # url: https://pypi.org/p/static_error_handler
-      #
-      # ALTERNATIVE: if your GitHub Release name is the PyPI project version string
-      # ALTERNATIVE: exactly, uncomment the following line instead:
-      url: https://pypi.org/project/static_error_handler/${{ github.event.release.name }}
+      url: https://pypi.org/project/static_error_handler/
 
     steps:
       - name: Retrieve release distributions
